@@ -1,0 +1,265 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    background-color: #F6F3EF;
+    color: #140C0F;
+  }
+}
+
+/* ======================================================== */
+/* CAREFULLY BUILT LIGHT MODE: HIGH CONTRAST & LEGIBILITY  */
+/* ======================================================== */
+
+html:not(.dark) {
+  background-color: #F6F3EF;
+  color: #140C0F;
+}
+
+/* 1. Primary Text: Deep rich charcoal espresso for pristine clarity */
+html:not(.dark) h1,
+html:not(.dark) h2,
+html:not(.dark) h3,
+html:not(.dark) h4,
+html:not(.dark) .text-\[\#2D1F24\],
+html:not(.dark) .text-slate-900,
+html:not(.dark) .text-slate-800,
+html:not(.dark) .text-gray-900 {
+  color: #140C0F !important;
+}
+
+/* 2. Secondary & Meta Text: Deep mocha slate for 7+:1 WCAG AAA legibility */
+html:not(.dark) .text-\[\#8B7578\],
+html:not(.dark) .text-\[\#A89598\],
+html:not(.dark) .text-slate-500,
+html:not(.dark) .text-slate-400,
+html:not(.dark) .text-gray-500,
+html:not(.dark) .text-gray-400 {
+  color: #4A3B40 !important;
+}
+
+/* 3. Romantic Accents & Emphases: Vivid rich berry */
+html:not(.dark) .text-\[\#9B4D6F\],
+html:not(.dark) .text-purple-700,
+html:not(.dark) .text-purple-800,
+html:not(.dark) .text-purple-900 {
+  color: #87204B !important;
+}
+
+/* 4. Soft pink text on light mode: darken to visible rose */
+html:not(.dark) .text-\[\#E8A5B9\] {
+  color: #A83B63 !important;
+}
+
+/* 5. Crisp Card Borders: defined edges preventing visual wash-out */
+html:not(.dark) .border-\[\#F0DFE3\],
+html:not(.dark) .border-slate-200,
+html:not(.dark) .border-slate-200\/90,
+html:not(.dark) .border-slate-200\/80,
+html:not(.dark) .divide-\[\#F0DFE3\] > * + * {
+  border-color: #DFCFD4 !important;
+}
+
+/* 6. Solid Crisp Card Surfaces */
+html:not(.dark) .bg-white\/80,
+html:not(.dark) .bg-white\/70,
+html:not(.dark) .bg-white\/90 {
+  background-color: #FFFFFF !important;
+  box-shadow: 0 4px 16px -2px rgba(28, 17, 22, 0.05);
+}
+
+/* 7. Input fields: clean white background, high-contrast text and clear placeholder */
+html:not(.dark) input:not([type="checkbox"]):not([type="radio"]),
+html:not(.dark) textarea,
+html:not(.dark) select {
+  background-color: #FFFFFF !important;
+  color: #140C0F !important;
+  border-color: #D6C4CA !important;
+}
+
+html:not(.dark) input::placeholder,
+html:not(.dark) textarea::placeholder {
+  color: #736168 !important;
+  opacity: 1 !important;
+}
+
+/* 8. Light-mode Primary Button Gradient: high contrast vibrant rose-berry with white text */
+html:not(.dark) .bg-gradient-to-r.from-\[\#E8A5B9\].to-\[\#9B4D6F\] {
+  background-image: linear-gradient(to right, #DE7090, #87204B) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 4px 14px 0 rgba(135, 32, 75, 0.28) !important;
+}
+
+/* ======================================================== */
+/* CAREFULLY BUILT DARK MODE: ULTRA-HIGH CONTRAST & CLARITY */
+/* ======================================================== */
+
+html.dark {
+  background-color: #0D080A !important;
+  color: #FFFFFF !important;
+  color-scheme: dark;
+}
+
+html.dark body {
+  background-color: #0D080A !important;
+  color: #FFFFFF !important;
+}
+
+/* 1. All Headings & Primary Text: Brilliant Crisp White in Dark Mode (18:1 contrast) */
+html.dark h1,
+html.dark h2,
+html.dark h3,
+html.dark h4,
+html.dark h5,
+html.dark h6,
+html.dark .text-\[\#2D1F24\],
+html.dark .dark\:text-\[\#F5E6EA\],
+html.dark .dark\:text-white,
+html.dark .text-slate-900,
+html.dark .dark\:text-slate-100 {
+  color: #FFFFFF !important;
+}
+
+/* 2. Secondary & Meta Text: Luminous Silver-Mocha (#E6D7DE) -> 11+:1 contrast! */
+html.dark .text-\[\#8B7578\],
+html.dark .text-\[\#A89598\],
+html.dark .dark\:text-\[\#A89598\],
+html.dark .text-slate-500,
+html.dark .text-slate-400,
+html.dark .dark\:text-slate-400,
+html.dark .dark\:text-slate-300,
+html.dark .text-gray-500,
+html.dark .text-gray-400 {
+  color: #E6D7DE !important;
+}
+
+/* 3. Luminous Romantic Berry / Rose Accents in Dark Mode */
+html.dark .text-\[\#9B4D6F\],
+html.dark .dark\:text-\[\#E8A5B9\],
+html.dark .text-\[\#E8A5B9\],
+html.dark .text-purple-700,
+html.dark .text-purple-600,
+html.dark .dark\:text-lavender-300,
+html.dark .dark\:text-softpink-400 {
+  color: #FFAEC8 !important;
+}
+
+/* 4. Defined, Crisp Card Borders in Dark Mode (prevents dark-on-dark muddy wash) */
+html.dark .border-\[\#3D2F34\],
+html.dark .dark\:border-\[\#3D2F34\],
+html.dark .border-\[\#F0DFE3\],
+html.dark .border-slate-200,
+html.dark .dark\:border-white\/10,
+html.dark .dark\:border-lavender-500\/15,
+html.dark .dark\:border-lavender-500\/20,
+html.dark .dark\:border-lavender-400\/30,
+html.dark .divide-\[\#3D2F34\] > * + *,
+html.dark .dark\:divide-\[\#3D2F34\] > * + *,
+html.dark .divide-\[\#F0DFE3\] > * + * {
+  border-color: #543745 !important;
+}
+
+/* 5. Deep Velvet Card & Panel Backgrounds (distinct from #0D080A page background) */
+html.dark .bg-\[\#261E21\],
+html.dark .dark\:bg-\[\#261E21\],
+html.dark .dark\:bg-midnight-950,
+html.dark .dark\:bg-midnight-900,
+html.dark .bg-white\/90,
+html.dark .bg-white\/80,
+html.dark .bg-white {
+  background-color: #1F151C !important;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.55);
+}
+
+html.dark .bg-\[\#1A1416\],
+html.dark .dark\:bg-\[\#1A1416\] {
+  background-color: #140C11 !important;
+}
+
+/* Subtle inner containers / pill backgrounds in dark mode */
+html.dark .bg-\[\#FFF4E6\],
+html.dark .dark\:bg-\[\#33282C\] {
+  background-color: #2D1D27 !important;
+  border-color: #543745 !important;
+}
+
+/* 6. Inputs & Textareas in Dark Mode: deep velvet background, pure white text & clear placeholder */
+html.dark input:not([type="checkbox"]):not([type="radio"]),
+html.dark textarea,
+html.dark select {
+  background-color: #170E14 !important;
+  color: #FFFFFF !important;
+  border-color: #543745 !important;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #BFAAB4 !important;
+  opacity: 1 !important;
+}
+
+/* 7. Buttons in Dark Mode: vibrant glowing gradient with bold white text */
+html.dark .bg-gradient-to-r.from-\[\#E8A5B9\].to-\[\#9B4D6F\] {
+  background-image: linear-gradient(to right, #E86B91, #9B2857) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 4px 18px 0 rgba(232, 107, 145, 0.45) !important;
+}
+
+html.dark .bg-\[\#E8A5B9\].text-white,
+html.dark button.bg-\[\#E8A5B9\] {
+  background-color: #A3295B !important;
+  color: #FFFFFF !important;
+}
+
+/* 8. Icons & Chevrons in Dark Mode */
+html.dark svg {
+  color: inherit;
+}
+html.dark .text-\[\#8B7578\] svg,
+html.dark .dark\:text-\[\#A89598\] svg {
+  color: #E6D7DE !important;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(140, 36, 79, 0.2);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(140, 36, 79, 0.4);
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0.75rem);
+}
