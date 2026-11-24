@@ -18,48 +18,14 @@ export const GratitudeJarSection: React.FC<{
 }> = ({ onMilestoneReached }) => {
   const { partnerUser, currentUser } = useCouple();
 
-  const [notes, setNotes] = useState<GratitudeNoteItem[]>([
-    {
-      id: '1',
-      text: 'Thank you for bringing me warm tea when I had that long work call today. You always notice the small things.',
-      authorName: currentUser.name.split(' ')[0],
-      authorAvatar: currentUser.avatar,
-      dateText: 'Today',
-      colorBg: 'bg-[#FFE3E8]'
-    },
-    {
-      id: '2',
-      text: 'How tightly you held my hand while we crossed the street yesterday. It made me feel so cherished.',
-      authorName: partnerUser.name.split(' ')[0],
-      authorAvatar: partnerUser.avatar,
-      dateText: 'Yesterday',
-      colorBg: 'bg-[#FFF3CD]'
-    },
-    {
-      id: '3',
-      text: 'Your belly laugh when our pancake flipped completely upside down onto the counter! I love our goofy mornings.',
-      authorName: currentUser.name.split(' ')[0],
-      authorAvatar: currentUser.avatar,
-      dateText: '3 days ago',
-      colorBg: 'bg-[#E3F2FD]'
-    },
-    {
-      id: '4',
-      text: 'For listening without judgment when I was feeling overwhelmed. You are my calm in every storm.',
-      authorName: partnerUser.name.split(' ')[0],
-      authorAvatar: partnerUser.avatar,
-      dateText: '5 days ago',
-      colorBg: 'bg-[#E8F5E9]'
-    },
-    {
-      id: '5',
-      text: 'The spontaneous forehead kiss before leaving for work. It gave me energy for the whole day.',
-      authorName: currentUser.name.split(' ')[0],
-      authorAvatar: currentUser.avatar,
-      dateText: '1 week ago',
-      colorBg: 'bg-[#F3E5F5]'
+  const [notes, setNotes] = useState<GratitudeNoteItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('2be_gratitude_notes');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
     }
-  ]);
+  });
 
   const [inputText, setInputText] = useState('');
   const [isShaking, setIsShaking] = useState(false);
@@ -83,11 +49,18 @@ export const GratitudeJarSection: React.FC<{
       : 'from-[#E8A5B9] to-[#9B4D6F]';
 
   const triggerShake = () => {
+    if (notes.length === 0) {
+      setPartnerNotification('Your jar is empty right now! Drop your first note of appreciation below 💕');
+      setTimeout(() => setPartnerNotification(null), 3500);
+      return;
+    }
     setIsShaking(true);
     setTimeout(() => {
       setIsShaking(false);
       const randomNote = notes[Math.floor(Math.random() * notes.length)];
-      setActiveNoteModal(randomNote);
+      if (randomNote) {
+        setActiveNoteModal(randomNote);
+      }
       analytics.trackGratitudeNoteRead('shake');
       try {
         confetti({ particleCount: 25, spread: 50, origin: { y: 0.6 } });
@@ -113,7 +86,11 @@ export const GratitudeJarSection: React.FC<{
     };
 
     const nextCount = notes.length + 1;
-    setNotes([newNote, ...notes]);
+    const updatedNotes = [newNote, ...notes];
+    setNotes(updatedNotes);
+    try {
+      localStorage.setItem('2be_gratitude_notes', JSON.stringify(updatedNotes));
+    } catch (e) {}
     setInputText('');
 
     // Notification

@@ -173,8 +173,35 @@ export const CoupleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   // State initialization
-  const [coupleSpace, setCoupleSpace] = useState<CoupleSpace>(() => getStored('space', initialCoupleSpace));
-  const [currentUserId, setCurrentUserId] = useState<string>(() => getStored('currentUserId', 'user-alex'));
+  const [coupleSpace, setCoupleSpace] = useState<CoupleSpace>(() => {
+    const stored = getStored('space', null);
+    if (stored) return stored;
+    const myName = localStorage.getItem('twobe_display_name') || 'You';
+    const partnerName = localStorage.getItem('twobe_partner_nickname') || 'My Partner';
+    const myEmail = localStorage.getItem('twobe_email') || '';
+    const myAvatar = localStorage.getItem('twobe_avatar') || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80';
+    return {
+      ...initialCoupleSpace,
+      name: `${myName} & ${partnerName}`,
+      members: [
+        {
+          ...initialCoupleSpace.members[0],
+          id: 'user-me',
+          name: myName,
+          nickname: myName,
+          email: myEmail,
+          avatar: myAvatar
+        },
+        {
+          ...initialCoupleSpace.members[1],
+          id: 'user-partner',
+          name: partnerName,
+          nickname: partnerName
+        }
+      ]
+    };
+  });
+  const [currentUserId, setCurrentUserId] = useState<string>(() => getStored('currentUserId', 'user-me'));
   const [activeTab, setActiveTabState] = useState<TabType>('home');
   const [activeUsModule, setActiveUsModule] = useState<string | null>(null);
 
@@ -272,7 +299,8 @@ export const CoupleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const switchUser = () => {
-    const nextId = currentUserId === 'user-alex' ? 'user-maya' : 'user-alex';
+    const memberIds = coupleSpace.members.map(m => m.id);
+    const nextId = currentUserId === memberIds[0] ? memberIds[1] : memberIds[0];
     setCurrentUserId(nextId);
     const nextUser = coupleSpace.members.find(m => m.id === nextId);
     showToast(`Switched perspective to ${nextUser?.name} (${nextUser?.nickname})`, 'info');

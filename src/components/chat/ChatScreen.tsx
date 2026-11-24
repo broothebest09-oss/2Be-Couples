@@ -604,6 +604,27 @@ export const ChatScreen: React.FC = () => {
 
       {/* MESSAGE FEED with SWIPE TO REPLY & DOUBLE-TAP TO REACT */}
       <div className="flex-1 overflow-y-auto py-3 space-y-3 pr-1 scroll-smooth">
+        {filteredMessages.length === 0 && (
+          <div className="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-4 my-auto min-h-[350px]">
+            <div className="w-16 h-16 rounded-full bg-[#E8A5B9]/20 border border-[#E8A5B9]/40 flex items-center justify-center text-[#E8A5B9] animate-pulse">
+              <Heart className="w-8 h-8 fill-current" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-[#2D1F24] dark:text-[#F5E6EA]">
+                Your Private Sanctuary is Ready
+              </h3>
+              <p className="text-xs text-[#8B7578] dark:text-[#A89598] mt-1.5 max-w-xs mx-auto leading-relaxed">
+                Everything here is end-to-end encrypted. Say hello or send a secret kiss to {partnerUser.name} to start your story 💕
+              </p>
+            </div>
+            <button
+              onClick={sendKiss}
+              className="px-5 py-2.5 rounded-full bg-gradient-to-r from-[#E8A5B9] to-[#9B4D6F] text-white text-xs font-bold shadow-rose-glow active:scale-95 transition flex items-center space-x-1.5"
+            >
+              <span>💋 Send First Kiss</span>
+            </button>
+          </div>
+        )}
         {filteredMessages.map((msg, index) => {
           const isSender = msg.senderId === currentUser.id;
           const isSwiped = swipedMessageId === msg.id;

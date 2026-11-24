@@ -22,61 +22,21 @@ export const BucketListSection: React.FC<{
 }> = ({ onMemoryCreated }) => {
   const { partnerUser, currentUser } = useCouple();
 
-  const [items, setItems] = useState<BucketDreamItem[]>([
-    {
-      id: '1',
-      text: 'Watch the Northern Lights from a cozy glass igloo',
-      authorName: partnerUser.name.split(' ')[0],
-      authorAvatar: partnerUser.avatar,
-      isCompleted: false,
-      dateAdded: 'Nov 12',
-      category: 'Travel',
-      emoji: '✈️',
-      targetDate: 'Winter 2027'
-    },
-    {
-      id: '2',
-      text: 'Cook a 5-course homemade pasta dinner together from scratch',
-      authorName: currentUser.name.split(' ')[0],
-      authorAvatar: currentUser.avatar,
-      isCompleted: false,
-      dateAdded: 'Nov 8',
-      category: 'Food',
-      emoji: '🍝'
-    },
-    {
-      id: '3',
-      text: 'Take a sunrise hot air balloon flight over Cappadocia',
-      authorName: partnerUser.name.split(' ')[0],
-      authorAvatar: partnerUser.avatar,
-      isCompleted: false,
-      dateAdded: 'Oct 29',
-      category: 'Adventure',
-      emoji: '🧗'
-    },
-    {
-      id: '4',
-      text: 'Dance together in the pouring rain with no umbrellas',
-      authorName: currentUser.name.split(' ')[0],
-      authorAvatar: currentUser.avatar,
-      isCompleted: true,
-      dateAdded: 'Sep 15',
-      dateCompleted: 'Nov 4',
-      category: 'Romance',
-      emoji: '🌹'
-    },
-    {
-      id: '5',
-      text: 'Adopt our first rescue puppy together 🐶',
-      authorName: partnerUser.name.split(' ')[0],
-      authorAvatar: partnerUser.avatar,
-      isCompleted: true,
-      dateAdded: 'Aug 20',
-      dateCompleted: 'Oct 12',
-      category: 'Other',
-      emoji: '✨'
+  const [items, setItems] = useState<BucketDreamItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('2be_bucket_list');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
     }
-  ]);
+  });
+
+  const saveItems = (updated: BucketDreamItem[]) => {
+    setItems(updated);
+    try {
+      localStorage.setItem('2be_bucket_list', JSON.stringify(updated));
+    } catch (e) {}
+  };
 
   // Modal states
   const [showAddModal, setShowAddModal] = useState(false);
@@ -117,7 +77,7 @@ export const BucketListSection: React.FC<{
       targetDate: newTargetDate.trim() || undefined
     };
 
-    setItems([newDream, ...items]);
+    saveItems([newDream, ...items]);
     setShowAddModal(false);
     setNewText('');
     setNewTargetDate('');
@@ -140,7 +100,7 @@ export const BucketListSection: React.FC<{
         ? { ...i, isCompleted: true, dateCompleted: 'Today' }
         : i
     );
-    setItems(updated);
+    saveItems(updated);
     analytics.trackBucketItemCompleted(14, Boolean(withMemory));
 
     if (withMemory) {
@@ -286,7 +246,7 @@ export const BucketListSection: React.FC<{
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        setItems(
+                        saveItems(
                           items.map((i) =>
                             i.id === item.id ? { ...i, isCompleted: false, dateCompleted: undefined } : i
                           )
@@ -430,7 +390,7 @@ export const BucketListSection: React.FC<{
                 <>
                   <button
                     onClick={() => {
-                      setItems(
+                      saveItems(
                         items.map((i) => (i.id === selectedDetail.id ? selectedDetail : i))
                       );
                       setSelectedDetail(null);
@@ -442,7 +402,7 @@ export const BucketListSection: React.FC<{
                   <button
                     onClick={() => {
                       if (confirm('Delete this dream from your bucket list?')) {
-                        setItems(items.filter((i) => i.id !== selectedDetail.id));
+                        saveItems(items.filter((i) => i.id !== selectedDetail.id));
                         setSelectedDetail(null);
                       }
                     }}

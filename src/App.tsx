@@ -126,18 +126,6 @@ const MainLayout: React.FC = () => {
           <Monitor className="w-3.5 h-3.5" />
           <span>Full Width</span>
         </button>
-        <button
-          onClick={() => {
-            localStorage.removeItem('twobe_is_paired');
-            localStorage.removeItem('twobe_onboarding_step');
-            setIsPaired(false);
-          }}
-          className="flex items-center space-x-1 px-2.5 py-1 rounded-full text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition font-medium"
-          title="Restart Onboarding & Pairing Flow"
-        >
-          <RefreshCw className="w-3.5 h-3.5" />
-          <span>Reset to Onboarding</span>
-        </button>
       </div>
 
       {/* App Container */}
