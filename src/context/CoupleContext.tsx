@@ -43,6 +43,8 @@ import {
 } from '../data/initialData';
 import { soundFX } from '../utils/audio';
 import { analytics } from '../services/analytics';
+import { supabaseService } from '../services/supabaseService';
+import { isSupabaseConfigured } from '../lib/supabase';
 
 type TabType = 'home' | 'chat' | 'snap' | 'us' | 'profile' | 'avatar';
 
@@ -291,6 +293,32 @@ export const CoupleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const currentUser = coupleSpace.members.find(m => m.id === currentUserId) || coupleSpace.members[0];
   const partnerUser = coupleSpace.members.find(m => m.id !== currentUserId) || coupleSpace.members[1];
 
+  // Supabase Real-Time Listener for Cross-Device Chat
+  useEffect(() => {
+    const coupleId = localStorage.getItem('twobe_couple_id');
+    if (coupleId && isSupabaseConfigured) {
+      const unsubscribe = supabaseService.subscribeToMessages(coupleId, (supabaseMsg) => {
+        if (supabaseMsg.sender_id !== currentUserId) {
+          soundFX.playMessageReceive();
+          setMessages(prev => {
+            if (prev.some(m => m.id === supabaseMsg.id)) return prev;
+            const incoming: ChatMessage = {
+              id: supabaseMsg.id,
+              senderId: partnerUser.id,
+              text: supabaseMsg.text,
+              mediaUrl: supabaseMsg.media_url,
+              status: 'delivered',
+              reactions: [],
+              timestamp: new Date(supabaseMsg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            };
+            return [...prev, incoming];
+          });
+        }
+      });
+      return unsubscribe;
+    }
+  }, [currentUserId, partnerUser.id]);
+
   const showToast = (message: string, type: 'info' | 'love' | 'kiss' = 'info') => {
     setActiveToast({ message, type });
     setTimeout(() => {
@@ -355,6 +383,18 @@ export const CoupleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     setMessages(prev => [...prev, newMsg]);
     soundFX.playMessageSend();
+
+    // Supabase Real-Time Broadcast across devices
+    const coupleId = localStorage.getItem('twobe_couple_id');
+    if (coupleId && isSupabaseConfigured) {
+      supabaseService.sendMessage(
+        coupleId,
+        currentUser.id,
+        payload.text || '',
+        payload.mediaType || 'text',
+        payload.mediaUrl
+      ).catch(console.error);
+    }
 
     // GA4 / Firebase Analytics Event Tracking
     const msgType = payload.mediaType || (payload.text ? 'text' : 'unknown');

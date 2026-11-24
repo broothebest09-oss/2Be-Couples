@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, MessageCircle, Sparkles, Check, Copy, Share2, ArrowLeft, AlertCircle, RefreshCw, Loader2, ShieldCheck, X, User } from 'lucide-react';
+import { Heart, MessageCircle, Sparkles, Check, Copy, Share2, ArrowLeft, AlertCircle, RefreshCw, Loader2, ShieldCheck, X, User, Database } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { AgeGateModal } from '../legal/AgeGateModal';
 import { analytics } from '../../services/analytics';
+import { supabaseService } from '../../services/supabaseService';
+import { isSupabaseConfigured } from '../../lib/supabase';
+import { SupabaseConfigModal } from '../common/SupabaseConfigModal';
 
 interface OnboardingFlowProps {
   onComplete: (partnerName: string) => void;
@@ -61,6 +64,9 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
   const [googleCustomName, setGoogleCustomName] = useState('');
   const [showCustomGoogleForm, setShowCustomGoogleForm] = useState(false);
 
+  // Supabase Backend state
+  const [showSupabaseModal, setShowSupabaseModal] = useState(false);
+
   // Age Gate & Legal state
   const [showAgeGate, setShowAgeGate] = useState(false);
   const [pendingNextAction, setPendingNextAction] = useState<'google' | 'signup' | null>(null);
@@ -84,8 +90,36 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
   const [isInviteExpired, setIsInviteExpired] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const inviteCode = '2BE-8842';
-  const partnerName = partnerNickname || 'Sarah';
+  const [inviteCode] = useState(() => {
+    const saved = localStorage.getItem('twobe_my_invite_code');
+    if (saved) return saved;
+    const randomDigits = Math.floor(1000 + Math.random() * 9000);
+    const code = `2BE-${randomDigits}`;
+    localStorage.setItem('twobe_my_invite_code', code);
+    return code;
+  });
+  const [partnerName, setPartnerName] = useState(() => partnerNickname || 'Partner');
+
+  // Supabase Real-time pairing listener for Phone 1
+  useEffect(() => {
+    if (step === 'invite' && inviteOption === 'send' && isSupabaseConfigured) {
+      const userId = localStorage.getItem('twobe_user_id') || `user-${Date.now()}`;
+      const myName = localStorage.getItem('twobe_display_name') || 'Partner 1';
+      supabaseService.createCoupleInvite(userId, myName, inviteCode).then(couple => {
+        if (couple?.id) {
+          localStorage.setItem('twobe_couple_id', couple.id);
+          const unsub = supabaseService.subscribeToPairing(couple.id, (pairedCouple) => {
+            if (pairedCouple.user2_name) {
+              setPartnerName(pairedCouple.user2_name);
+              localStorage.setItem('twobe_partner_nickname', pairedCouple.user2_name);
+            }
+            changeStep('success');
+          });
+          return unsub;
+        }
+      }).catch(console.error);
+    }
+  }, [step, inviteOption, inviteCode]);
 
   const changeStep = (nextStep: string) => {
     setStep(nextStep);
@@ -334,9 +368,25 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
             >
               Already have an account? Log in
             </button>
+
+            {/* Cloud Backend Setup Badge */}
+            <div className="pt-2 flex justify-center">
+              <button
+                type="button"
+                onClick={() => setShowSupabaseModal(true)}
+                className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-white/80 dark:bg-[#261E21]/80 border border-[#F0DFE3] dark:border-[#3D2F34] text-[11px] font-semibold text-[#8B7578] dark:text-[#A89598] hover:border-[#E8A5B9] transition shadow-xs"
+              >
+                <Database className="w-3.5 h-3.5 text-[#9B4D6F] dark:text-[#E8A5B9]" />
+                <span>{isSupabaseConfigured ? '🟢 Supabase Connected' : '⚙️ Connect Supabase Backend'}</span>
+              </button>
+            </div>
           </div>
         </div>
         {renderGoogleModal()}
+        <SupabaseConfigModal
+          isOpen={showSupabaseModal}
+          onClose={() => setShowSupabaseModal(false)}
+        />
         <AgeGateModal
           isOpen={showAgeGate}
           onVerified={(tier, consents) => {
@@ -355,22 +405,27 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
 
   // SCREEN 3 - SIGN UP
   if (step === 'signup') {
-    const handleSendCode = () => {
+    const handleSendCode = async () => {
       const trimmed = emailOrPhone.trim();
-      if (!trimmed || (!trimmed.includes('@') && trimmed.length < 8)) {
-        setErrorMessage('Please enter a valid email or phone number');
+      if (!trimmed || !trimmed.includes('@')) {
+        setErrorMessage('Please enter a valid email address (e.g. name@gmail.com)');
         return;
       }
       setIsLoading(true);
       setErrorMessage(null);
-      setTimeout(() => {
+
+      try {
+        await supabaseService.sendEmailOtp(trimmed);
         setIsLoading(false);
         setIsCodeSent(true);
         localStorage.setItem('twobe_email', trimmed);
-      }, 700);
+      } catch (err: any) {
+        setIsLoading(false);
+        setErrorMessage(err.message || 'Failed to send verification code. Please check your email.');
+      }
     };
 
-    const handleVerify = () => {
+    const handleVerify = async () => {
       const codeStr = otpCode.join('');
       if (codeStr.length < 6) {
         setErrorMessage('Please enter all 6 digits');
@@ -378,11 +433,19 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
       }
       setIsLoading(true);
       setErrorMessage(null);
-      setTimeout(() => {
+
+      try {
+        const { user } = await supabaseService.verifyEmailOtp(emailOrPhone.trim(), codeStr);
+        if (user?.id) {
+          localStorage.setItem('twobe_user_id', user.id);
+        }
         setIsLoading(false);
         analytics.trackSignupComplete('email', 12);
         changeStep('profile');
-      }, 700);
+      } catch (err: any) {
+        setIsLoading(false);
+        setErrorMessage(err.message || 'Invalid or expired confirmation code.');
+      }
     };
 
     return (
@@ -472,32 +535,28 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
                   ))}
                 </div>
 
-                {/* One-click Auto-fill Demo Code */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    const demo = ['1', '2', '3', '4', '5', '6'];
-                    setOtpCode(demo);
-                    setErrorMessage(null);
-                    setIsLoading(true);
-                    setTimeout(() => {
-                      setIsLoading(false);
-                      changeStep('profile');
-                    }, 400);
-                  }}
-                  className="w-full py-2.5 rounded-[16px] bg-[#E8A5B9]/20 hover:bg-[#E8A5B9]/30 text-[#9B4D6F] dark:text-[#E8A5B9] text-xs font-bold transition flex items-center justify-center space-x-1.5 border border-[#E8A5B9]/40 active:scale-95"
-                >
-                  <Sparkles className="w-4 h-4 text-[#9B4D6F] dark:text-[#E8A5B9]" />
-                  <span>Auto-fill Demo Code (123456) & Continue</span>
-                </button>
-
                 <button
                   onClick={handleVerify}
                   disabled={isLoading || otpCode.some((d) => !d)}
                   className="w-full h-12 rounded-[24px] bg-gradient-to-r from-[#E8A5B9] to-[#9B4D6F] text-white font-semibold shadow-rose-glow transition active:scale-95 flex items-center justify-center space-x-2 disabled:opacity-60"
                 >
-                  {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <span>Verify</span>}
+                  {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <span>Verify & Continue</span>}
                 </button>
+
+                {!isSupabaseConfigured && (
+                  <div className="p-3 rounded-[14px] bg-[#FFF4E6] dark:bg-[#33282C] border border-[#E8A5B9]/40 text-xs text-[#9B4D6F] dark:text-[#E8A5B9] flex items-center justify-between">
+                    <div className="text-[11px] leading-tight pr-2">
+                      Connect your free Supabase backend to deliver verification codes directly to real inboxes.
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowSupabaseModal(true)}
+                      className="px-2.5 py-1 rounded-full bg-[#E8A5B9] text-white font-bold text-[10px] shrink-0 active:scale-95 transition"
+                    >
+                      Connect
+                    </button>
+                  </div>
+                )}
 
                 <div className="flex items-center justify-between pt-1">
                   <button
@@ -521,6 +580,10 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
           </div>
         </div>
         {renderGoogleModal()}
+        <SupabaseConfigModal
+          isOpen={showSupabaseModal}
+          onClose={() => setShowSupabaseModal(false)}
+        />
       </>
     );
   }
@@ -777,11 +840,34 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
               </div>
 
               <button
-                onClick={() => changeStep('confirm')}
-                disabled={partnerCodeInput.some((d) => !d)}
-                className="w-full h-12 rounded-[24px] bg-gradient-to-r from-[#E8A5B9] to-[#9B4D6F] text-white font-semibold shadow-rose-glow transition active:scale-95 flex items-center justify-center disabled:opacity-60"
+                onClick={async () => {
+                  const code = partnerCodeInput.join('').toUpperCase();
+                  if (code.length < 6) return;
+                  setIsLoading(true);
+                  setErrorMessage(null);
+
+                  try {
+                    const userId = localStorage.getItem('twobe_user_id') || `user-${Date.now()}`;
+                    const myName = localStorage.getItem('twobe_display_name') || 'Partner';
+                    const res = await supabaseService.joinCoupleByInvite(userId, myName, code);
+                    if (res.partnerName) {
+                      setPartnerName(res.partnerName);
+                      localStorage.setItem('twobe_partner_nickname', res.partnerName);
+                    }
+                    if (res.couple?.id) {
+                      localStorage.setItem('twobe_couple_id', res.couple.id);
+                    }
+                    setIsLoading(false);
+                    changeStep('confirm');
+                  } catch (err: any) {
+                    setIsLoading(false);
+                    setErrorMessage(err.message || 'Could not connect with partner code.');
+                  }
+                }}
+                disabled={isLoading || partnerCodeInput.some((d) => !d)}
+                className="w-full h-12 rounded-[24px] bg-gradient-to-r from-[#E8A5B9] to-[#9B4D6F] text-white font-semibold shadow-rose-glow transition active:scale-95 flex items-center justify-center disabled:opacity-60 space-x-2"
               >
-                Connect with Partner
+                {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <span>Connect with Partner</span>}
               </button>
             </div>
           )}

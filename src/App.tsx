@@ -11,7 +11,9 @@ import { ProfileScreen } from './components/profile/ProfileScreen';
 import { AvatarScreen } from './components/avatar/AvatarScreen';
 import { SettingsScreen } from './components/settings/SettingsScreen';
 import { OnboardingFlow } from './components/onboarding/OnboardingFlow';
-import { Smartphone, Monitor, Lock, Fingerprint, Sparkles, RefreshCw } from 'lucide-react';
+import { Smartphone, Monitor, Lock, Fingerprint, Sparkles, RefreshCw, Database } from 'lucide-react';
+import { SupabaseConfigModal } from './components/common/SupabaseConfigModal';
+import { isSupabaseConfigured } from './lib/supabase';
 import { analytics } from './services/analytics';
 
 const MainLayout: React.FC = () => {
@@ -27,6 +29,7 @@ const MainLayout: React.FC = () => {
   } = useCouple();
 
   const [deviceFrameMode, setDeviceFrameMode] = useState<'mobile' | 'responsive'>('mobile');
+  const [showSupabaseModal, setShowSupabaseModal] = useState(false);
   const [isPaired, setIsPaired] = useState<boolean>(() => {
     return localStorage.getItem('twobe_is_paired') === 'true';
   });
@@ -126,6 +129,14 @@ const MainLayout: React.FC = () => {
           <Monitor className="w-3.5 h-3.5" />
           <span>Full Width</span>
         </button>
+        <button
+          onClick={() => setShowSupabaseModal(true)}
+          className="flex items-center space-x-1 px-2.5 py-1 rounded-full text-[#9B4D6F] dark:text-[#E8A5B9] hover:bg-black/5 dark:hover:bg-white/10 transition font-medium"
+          title="Connect Supabase Cloud Backend"
+        >
+          <Database className="w-3.5 h-3.5" />
+          <span>{isSupabaseConfigured ? '🟢 Supabase' : '⚙️ Setup Supabase'}</span>
+        </button>
       </div>
 
       {/* App Container */}
@@ -154,6 +165,10 @@ const MainLayout: React.FC = () => {
 
         <Navigation />
         <Toast />
+        <SupabaseConfigModal
+          isOpen={showSupabaseModal}
+          onClose={() => setShowSupabaseModal(false)}
+        />
       </div>
     </div>
   );
