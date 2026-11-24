@@ -1,0 +1,19 @@
+{
+  "name": "2Be — The Private World for Two",
+  "short_name": "2Be",
+  "description": "An intimate, private encrypted space for couples",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1A1416",
+  "theme_color": "#E8A5B9",
+  "icons": [
+    {
+      "src": "./favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
